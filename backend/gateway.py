@@ -7,12 +7,15 @@ from collections import defaultdict
 import io
 import uvicorn
 import grpc
+from dotenv import load_dotenv
 import grpc_server.csv_processor_pb2_grpc
 import grpc_server.csv_processor_pb2
 
+load_dotenv()
+
 app = FastAPI()
 
-UPLOAD_DIR = "uploads"
+UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
@@ -27,7 +30,9 @@ async def upload_file(file: UploadFile, request: Request):
                 line=line.decode("utf-8")
             )
 
-    with grpc.insecure_channel("localhost:50051") as channel:
+    grpc_host = os.getenv("GRPC_HOST", "localhost")
+    grpc_port = os.getenv("GRPC_PORT", "50051")
+    with grpc.insecure_channel(f"{grpc_host}:{grpc_port}") as channel:
         stub = grpc_server.csv_processor_pb2_grpc.CsvProcessorStub(channel)
         response = stub.ProcessCsv(request_generator())
 
@@ -54,4 +59,6 @@ async def download_file(file_id: str):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    host = os.getenv("FASTAPI_HOST", "0.0.0.0")
+    port = int(os.getenv("FASTAPI_PORT", 8000))
+    uvicorn.run(app, host=host, port=port)

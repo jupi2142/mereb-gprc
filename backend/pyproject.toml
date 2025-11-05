@@ -11,4 +11,5 @@ dependencies = [
     "python-multipart>=0.0.20",
     "uvicorn",
     "black>=25.9.0",
+    "python-dotenv",
 ]

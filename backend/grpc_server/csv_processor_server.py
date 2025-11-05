@@ -1,7 +1,11 @@
 import grpc
 from concurrent import futures
+import os
+from dotenv import load_dotenv
 import csv_processor_pb2_grpc
 from csv_processor_service import CsvProcessorService
+
+load_dotenv()
 
 
 def serve():
@@ -9,9 +13,10 @@ def serve():
     csv_processor_pb2_grpc.add_CsvProcessorServicer_to_server(
         CsvProcessorService(), server
     )
-    server.add_insecure_port("[::]:50051")
+    grpc_port = os.getenv("GRPC_PORT", "50051")
+    server.add_insecure_port(f"[::]:{grpc_port}")
     server.start()
-    print("gRPC server started on port 50051")
+    print(f"gRPC server started on port {grpc_port}")
     server.wait_for_termination()
 
 
