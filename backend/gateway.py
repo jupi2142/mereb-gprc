@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, Request
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 import uuid
 import os
 import csv
@@ -15,6 +16,14 @@ load_dotenv()
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -26,9 +35,7 @@ async def upload_file(file: UploadFile, request: Request):
     # Call gRPC service with streaming
     def request_generator():
         for line in file.file:
-            yield csv_processor_pb2.ProcessCsvRequest(
-                line=line.decode("utf-8")
-            )
+            yield csv_processor_pb2.ProcessCsvRequest(line=line.decode("utf-8"))
 
     grpc_host = os.getenv("GRPC_HOST", "localhost")
     grpc_port = os.getenv("GRPC_PORT", "50051")
