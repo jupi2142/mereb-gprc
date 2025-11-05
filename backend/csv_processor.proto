@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package csv_processor;
+
+service CsvProcessor {
+  rpc ProcessCsv (stream ProcessCsvRequest) returns (ProcessCsvResponse);
+}
+
+message ProcessCsvRequest {
+  string line = 1;
+}
+
+message ProcessCsvResponse {
+  string processed_csv = 1;
+}

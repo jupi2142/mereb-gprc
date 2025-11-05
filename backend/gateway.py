@@ -6,6 +6,9 @@ import csv
 from collections import defaultdict
 import io
 import uvicorn
+import grpc
+import csv_processor_pb2_grpc
+import csv_processor_pb2
 
 app = FastAPI()
 
@@ -13,28 +16,23 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
-def aggregate_sales(reader):
-    sales = defaultdict(int)
-    _ = next(reader)  # Skip header
-    for row in reader:
-        dept, _, num_sales = row
-        sales[dept] += int(num_sales)
-    return sales
-
-
 @app.post("/upload")
 async def upload_file(file: UploadFile, request: Request):
     file.file.seek(0)
-    reader = csv.reader(io.TextIOWrapper(file.file, encoding="utf-8"))
-    sales = aggregate_sales(reader)
+
+    # Call gRPC service with streaming
+    def request_generator():
+        for line in file.file:
+            yield csv_processor_pb2.ProcessCsvRequest(line=line.decode("utf-8"))
+
+    with grpc.insecure_channel('localhost:50051') as channel:
+        stub = csv_processor_pb2_grpc.CsvProcessorStub(channel)
+        response = stub.ProcessCsv(request_generator())
 
     result_id = str(uuid.uuid4())
     result_path = os.path.join(UPLOAD_DIR, f"{result_id}.csv")
     with open(result_path, "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(["Department Name", "Total Sales"])
-        for dept, total in sales.items():
-            writer.writerow([dept, total])
+        f.write(response.processed_csv)
 
     download_url = request.url_for('download_file', file_id=result_id)
     return {"download_url": str(download_url)}
