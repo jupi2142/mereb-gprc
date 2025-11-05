@@ -34,7 +34,7 @@ class CsvProcessorStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.ProcessCsv = channel.stream_unary(
+        self.ProcessCsv = channel.unary_unary(
                 '/csv_processor.CsvProcessor/ProcessCsv',
                 request_serializer=csv__processor__pb2.ProcessCsvRequest.SerializeToString,
                 response_deserializer=csv__processor__pb2.ProcessCsvResponse.FromString,
@@ -49,7 +49,7 @@ class CsvProcessorStub(object):
 class CsvProcessorServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def ProcessCsv(self, request_iterator, context):
+    def ProcessCsv(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -64,7 +64,7 @@ class CsvProcessorServicer(object):
 
 def add_CsvProcessorServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'ProcessCsv': grpc.stream_unary_rpc_method_handler(
+            'ProcessCsv': grpc.unary_unary_rpc_method_handler(
                     servicer.ProcessCsv,
                     request_deserializer=csv__processor__pb2.ProcessCsvRequest.FromString,
                     response_serializer=csv__processor__pb2.ProcessCsvResponse.SerializeToString,
@@ -86,7 +86,7 @@ class CsvProcessor(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def ProcessCsv(request_iterator,
+    def ProcessCsv(request,
             target,
             options=(),
             channel_credentials=None,
@@ -96,8 +96,8 @@ class CsvProcessor(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.stream_unary(
-            request_iterator,
+        return grpc.experimental.unary_unary(
+            request,
             target,
             '/csv_processor.CsvProcessor/ProcessCsv',
             csv__processor__pb2.ProcessCsvRequest.SerializeToString,

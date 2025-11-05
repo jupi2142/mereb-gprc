@@ -10,9 +10,8 @@ from celery_app import celery_app, process_csv_task
 
 
 class CsvProcessorService(CsvProcessorServicer):
-    def ProcessCsv(self, request_iterator, context):
-        lines = [request.line for request in request_iterator]
-        task = process_csv_task.delay(lines)
+    def ProcessCsv(self, request, context):
+        task = process_csv_task.delay(request.file_path)
         return ProcessCsvResponse(task_id=task.id)
 
     def GetProcessingResult(self, request, context):
