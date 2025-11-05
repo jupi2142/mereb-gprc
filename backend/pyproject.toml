@@ -12,4 +12,7 @@ dependencies = [
     "uvicorn",
     "black>=25.9.0",
     "python-dotenv",
+    "celery",
+    "redis",
+    "ipdb>=0.13.13",
 ]

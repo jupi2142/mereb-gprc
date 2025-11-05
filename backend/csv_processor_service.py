@@ -1,39 +1,28 @@
 import csv
 import io
 from collections import defaultdict
+
+from click.core import F
 from csv_processor_pb2_grpc import CsvProcessorServicer
-from csv_processor_pb2 import ProcessCsvResponse
-
-
-def process_csv_data(lines_iter):
-    # Parse the CSV data from the lines iterator
-    reader = csv.reader(lines_iter)
-    sales = defaultdict(int)
-    try:
-        _ = next(reader)  # Skip header
-        for row in reader:
-            if len(row) < 3:
-                continue  # Skip invalid rows
-            dept, _, num_sales = row
-            sales[dept] += int(num_sales)
-    except (ValueError, StopIteration):
-        # Handle errors, perhaps return error response
-        pass
-
-    # Create the processed CSV
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["Department Name", "Total Sales"])
-    for dept, total in sales.items():
-        writer.writerow([dept, total])
-    processed_csv = output.getvalue()
-    return processed_csv
+from csv_processor_pb2 import ProcessCsvResponse, GetProcessingResultResponse
+from celery.result import AsyncResult
+from celery_app import celery_app, process_csv_task
 
 
 class CsvProcessorService(CsvProcessorServicer):
     def ProcessCsv(self, request_iterator, context):
-        # Process the CSV data from the streaming requests
-        lines_iter = (request.line for request in request_iterator)
-        processed_csv = process_csv_data(lines_iter)
+        lines = [request.line for request in request_iterator]
+        task = process_csv_task.delay(lines)
+        return ProcessCsvResponse(task_id=task.id)
 
-        return ProcessCsvResponse(processed_csv=processed_csv)
+    def GetProcessingResult(self, request, context):
+        task_result = AsyncResult(request.task_id, app=celery_app)
+        if task_result.state == "PENDING":
+            return GetProcessingResultResponse(completed=False)
+        elif task_result.state == "SUCCESS":
+            return GetProcessingResultResponse(
+                processed_csv=task_result.result, completed=True
+            )
+        else:
+            # Handle failure
+            return GetProcessingResultResponse(completed=False)

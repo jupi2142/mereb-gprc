@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13\x63sv_processor.proto\x12\rcsv_processor\"!\n\x11ProcessCsvRequest\x12\x0c\n\x04line\x18\x01 \x01(\t\"+\n\x12ProcessCsvResponse\x12\x15\n\rprocessed_csv\x18\x01 \x01(\t2c\n\x0c\x43svProcessor\x12S\n\nProcessCsv\x12 .csv_processor.ProcessCsvRequest\x1a!.csv_processor.ProcessCsvResponse(\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13\x63sv_processor.proto\x12\rcsv_processor\"!\n\x11ProcessCsvRequest\x12\x0c\n\x04line\x18\x01 \x01(\t\"%\n\x12ProcessCsvResponse\x12\x0f\n\x07task_id\x18\x01 \x01(\t\"-\n\x1aGetProcessingResultRequest\x12\x0f\n\x07task_id\x18\x01 \x01(\t\"G\n\x1bGetProcessingResultResponse\x12\x15\n\rprocessed_csv\x18\x01 \x01(\t\x12\x11\n\tcompleted\x18\x02 \x01(\x08\x32\xd1\x01\n\x0c\x43svProcessor\x12S\n\nProcessCsv\x12 .csv_processor.ProcessCsvRequest\x1a!.csv_processor.ProcessCsvResponse(\x01\x12l\n\x13GetProcessingResult\x12).csv_processor.GetProcessingResultRequest\x1a*.csv_processor.GetProcessingResultResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,7 +34,11 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_PROCESSCSVREQUEST']._serialized_start=38
   _globals['_PROCESSCSVREQUEST']._serialized_end=71
   _globals['_PROCESSCSVRESPONSE']._serialized_start=73
-  _globals['_PROCESSCSVRESPONSE']._serialized_end=116
-  _globals['_CSVPROCESSOR']._serialized_start=118
-  _globals['_CSVPROCESSOR']._serialized_end=217
+  _globals['_PROCESSCSVRESPONSE']._serialized_end=110
+  _globals['_GETPROCESSINGRESULTREQUEST']._serialized_start=112
+  _globals['_GETPROCESSINGRESULTREQUEST']._serialized_end=157
+  _globals['_GETPROCESSINGRESULTRESPONSE']._serialized_start=159
+  _globals['_GETPROCESSINGRESULTRESPONSE']._serialized_end=230
+  _globals['_CSVPROCESSOR']._serialized_start=233
+  _globals['_CSVPROCESSOR']._serialized_end=442
 # @@protoc_insertion_point(module_scope)

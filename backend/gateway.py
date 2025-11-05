@@ -42,11 +42,26 @@ async def upload_file(file: UploadFile, request: Request):
     with grpc.insecure_channel(f"{grpc_host}:{grpc_port}") as channel:
         stub = csv_processor_pb2_grpc.CsvProcessorStub(channel)
         response = stub.ProcessCsv(request_generator())
+        task_id = response.task_id
+        print(f"Task ID: {task_id}")
+
+        # Poll for result
+        import time
+
+        while True:
+            result_response = stub.GetProcessingResult(
+                csv_processor_pb2.GetProcessingResultRequest(task_id=task_id)
+            )
+            if result_response.completed:
+                processed_csv = result_response.processed_csv
+                break
+            print("Waiting for result...")
+            time.sleep(0.1)  # Wait a bit
 
     result_id = str(uuid.uuid4())
     result_path = os.path.join(UPLOAD_DIR, f"{result_id}.csv")
     with open(result_path, "w", newline="") as f:
-        f.write(response.processed_csv)
+        f.write(processed_csv)
 
     download_url = request.url_for("download_file", file_id=result_id)
     return {"download_url": str(download_url)}
