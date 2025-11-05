@@ -1,13 +1,14 @@
 # Mereb gRPC
 
-A gRPC-based CSV processing service with a FastAPI gateway.
+A gRPC-based CSV processing service with a FastAPI gateway and React frontend.
 
 ## Description
 
-This project provides a backend service for processing CSV files. It consists of:
+This project provides a backend service for processing CSV files with a React frontend. It consists of:
 
 - A gRPC server that handles CSV processing logic
 - A FastAPI gateway that accepts file uploads and communicates with the gRPC server
+- A React frontend for uploading and downloading CSV files
 
 ## Installation
 
@@ -18,6 +19,15 @@ Navigate to the backend directory and install dependencies using uv:
 ```bash
 cd backend
 uv sync
+```
+
+## Frontend Installation
+
+Navigate to the frontend directory and install dependencies:
+
+```bash
+cd frontend
+npm install
 ```
 
 ## Usage
@@ -35,6 +45,15 @@ python backend/main.py
 ```
 
 The gateway will be available at http://localhost:8000 (configurable via FASTAPI_HOST and FASTAPI_PORT env vars).
+
+3. Start the frontend:
+
+```bash
+cd frontend
+npm run dev
+```
+
+The frontend will be available at http://localhost:5173 (default Vite port).
 
 ## API
 
