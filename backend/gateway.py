@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, UploadFile, Request
 from fastapi.responses import FileResponse
 import uuid
 import os
@@ -14,7 +14,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 @app.post("/upload")
-async def upload_file(file: UploadFile):
+async def upload_file(file: UploadFile, request: Request):
     sales = defaultdict(int)
     file.file.seek(0)
     reader = csv.reader(io.TextIOWrapper(file.file, encoding="utf-8"))
@@ -24,19 +24,20 @@ async def upload_file(file: UploadFile):
         sales[dept] += int(num_sales)
 
     result_id = str(uuid.uuid4())
-    result_path = os.path.join(UPLOAD_DIR, f"{result_id}.csv")
+    result_path = os.path.join(UPLOAD_DIR, f"{result_id}_result.csv")
     with open(result_path, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["Department Name", "Total Sales"])
         for dept, total in sales.items():
             writer.writerow([dept, total])
 
-    return {"result_file_id": result_id}
+    download_url = request.url_for('download_file', file_id=result_id)
+    return {"download_url": str(download_url)}
 
 
 @app.get("/download/{file_id}")
 async def download_file(file_id: str):
-    file_path = os.path.join(UPLOAD_DIR, f"{file_id}.csv")
+    file_path = os.path.join(UPLOAD_DIR, f"{file_id}_result.csv")
     if os.path.exists(file_path):
         return FileResponse(file_path, media_type="text/csv", filename=f"{file_id}.csv",)
     else:
