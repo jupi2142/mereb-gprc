@@ -13,15 +13,20 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
-@app.post("/upload")
-async def upload_file(file: UploadFile, request: Request):
+def aggregate_sales(reader):
     sales = defaultdict(int)
-    file.file.seek(0)
-    reader = csv.reader(io.TextIOWrapper(file.file, encoding="utf-8"))
     _ = next(reader)  # Skip header
     for row in reader:
         dept, _, num_sales = row
         sales[dept] += int(num_sales)
+    return sales
+
+
+@app.post("/upload")
+async def upload_file(file: UploadFile, request: Request):
+    file.file.seek(0)
+    reader = csv.reader(io.TextIOWrapper(file.file, encoding="utf-8"))
+    sales = aggregate_sales(reader)
 
     result_id = str(uuid.uuid4())
     result_path = os.path.join(UPLOAD_DIR, f"{result_id}_result.csv")
