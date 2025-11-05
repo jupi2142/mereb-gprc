@@ -7,8 +7,8 @@ from collections import defaultdict
 import io
 import uvicorn
 import grpc
-import csv_processor_pb2_grpc
-import csv_processor_pb2
+import grpc_server.csv_processor_pb2_grpc
+import grpc_server.csv_processor_pb2
 
 app = FastAPI()
 
@@ -23,10 +23,12 @@ async def upload_file(file: UploadFile, request: Request):
     # Call gRPC service with streaming
     def request_generator():
         for line in file.file:
-            yield csv_processor_pb2.ProcessCsvRequest(line=line.decode("utf-8"))
+            yield grpc_server.csv_processor_pb2.ProcessCsvRequest(
+                line=line.decode("utf-8")
+            )
 
-    with grpc.insecure_channel('localhost:50051') as channel:
-        stub = csv_processor_pb2_grpc.CsvProcessorStub(channel)
+    with grpc.insecure_channel("localhost:50051") as channel:
+        stub = grpc_server.csv_processor_pb2_grpc.CsvProcessorStub(channel)
         response = stub.ProcessCsv(request_generator())
 
     result_id = str(uuid.uuid4())
@@ -34,7 +36,7 @@ async def upload_file(file: UploadFile, request: Request):
     with open(result_path, "w", newline="") as f:
         f.write(response.processed_csv)
 
-    download_url = request.url_for('download_file', file_id=result_id)
+    download_url = request.url_for("download_file", file_id=result_id)
     return {"download_url": str(download_url)}
 
 
@@ -42,7 +44,11 @@ async def upload_file(file: UploadFile, request: Request):
 async def download_file(file_id: str):
     file_path = os.path.join(UPLOAD_DIR, f"{file_id}.csv")
     if os.path.exists(file_path):
-        return FileResponse(file_path, media_type="text/csv", filename=f"{file_id}.csv",)
+        return FileResponse(
+            file_path,
+            media_type="text/csv",
+            filename=f"{file_id}.csv",
+        )
     else:
         return {"error": "File not found"}
 

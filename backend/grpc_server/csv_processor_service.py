@@ -4,6 +4,7 @@ from collections import defaultdict
 from csv_processor_pb2_grpc import CsvProcessorServicer
 from csv_processor_pb2 import ProcessCsvResponse
 
+
 class CsvProcessorService(CsvProcessorServicer):
     def ProcessCsv(self, request_iterator, context):
         # Accumulate all lines into a single CSV string

@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-import csv_processor_pb2 as csv__processor__pb2
+from . import csv_processor_pb2 as csv__processor__pb2
 
 GRPC_GENERATED_VERSION = '1.76.0'
 GRPC_VERSION = grpc.__version__
