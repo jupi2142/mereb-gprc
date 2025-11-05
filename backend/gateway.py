@@ -29,7 +29,7 @@ async def upload_file(file: UploadFile, request: Request):
     sales = aggregate_sales(reader)
 
     result_id = str(uuid.uuid4())
-    result_path = os.path.join(UPLOAD_DIR, f"{result_id}_result.csv")
+    result_path = os.path.join(UPLOAD_DIR, f"{result_id}.csv")
     with open(result_path, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["Department Name", "Total Sales"])
@@ -42,7 +42,7 @@ async def upload_file(file: UploadFile, request: Request):
 
 @app.get("/download/{file_id}")
 async def download_file(file_id: str):
-    file_path = os.path.join(UPLOAD_DIR, f"{file_id}_result.csv")
+    file_path = os.path.join(UPLOAD_DIR, f"{file_id}.csv")
     if os.path.exists(file_path):
         return FileResponse(file_path, media_type="text/csv", filename=f"{file_id}.csv",)
     else:
