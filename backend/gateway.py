@@ -8,8 +8,8 @@ import io
 import uvicorn
 import grpc
 from dotenv import load_dotenv
-import grpc_server.csv_processor_pb2_grpc
-import grpc_server.csv_processor_pb2
+import csv_processor_pb2_grpc
+import csv_processor_pb2
 
 load_dotenv()
 
@@ -26,14 +26,14 @@ async def upload_file(file: UploadFile, request: Request):
     # Call gRPC service with streaming
     def request_generator():
         for line in file.file:
-            yield grpc_server.csv_processor_pb2.ProcessCsvRequest(
+            yield csv_processor_pb2.ProcessCsvRequest(
                 line=line.decode("utf-8")
             )
 
     grpc_host = os.getenv("GRPC_HOST", "localhost")
     grpc_port = os.getenv("GRPC_PORT", "50051")
     with grpc.insecure_channel(f"{grpc_host}:{grpc_port}") as channel:
-        stub = grpc_server.csv_processor_pb2_grpc.CsvProcessorStub(channel)
+        stub = csv_processor_pb2_grpc.CsvProcessorStub(channel)
         response = stub.ProcessCsv(request_generator())
 
     result_id = str(uuid.uuid4())
