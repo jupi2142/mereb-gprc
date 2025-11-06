@@ -42,19 +42,19 @@ redis-server
 2. Start the Celery worker:
 
 ```bash
-celery -A backend.celery_app worker --loglevel=info
+uv run celery -A backend.celery_app worker --loglevel=info
 ```
 
 3. Start the gRPC server:
 
 ```bash
-python backend/csv_processor_server.py
+uv run backend/csv_processor_server.py
 ```
 
 4. Start the FastAPI gateway:
 
 ```bash
-python backend/main.py
+uv run backend/main.py
 ```
 
 The gateway will be available at http://localhost:8000 (configurable via FASTAPI_HOST and FASTAPI_PORT env vars).
@@ -74,7 +74,13 @@ The frontend will be available at http://localhost:5173 (default Vite port).
 
 POST /upload
 
-Upload a CSV file. The service processes it asynchronously via gRPC and Celery, then returns a download URL for the processed CSV.
+Upload a CSV file. The service processes it asynchronously via gRPC and Celery, then returns a download URL, initial status, and task ID for the processed CSV.
+
+### Check Processing Status
+
+GET /status/{task_id}
+
+Check the status of a CSV processing task. Returns completion status, processed CSV data, current status, and progress details including lines processed, departments, and time elapsed.
 
 ### Download Processed CSV
 
@@ -84,13 +90,15 @@ Download the processed CSV file.
 
 ## Environment Variables
 
-- GRPC_HOST: Host for gRPC server (default: localhost)
-- GRPC_PORT: Port for gRPC server (default: 50051)
-- FASTAPI_HOST: Host for FastAPI (default: 0.0.0.0)
-- FASTAPI_PORT: Port for FastAPI (default: 8000)
-- UPLOAD_DIR: Directory for uploads (default: uploads)
-- CELERY_BROKER_URL: URL for Celery message broker (default: redis://localhost:6379/0)
-- CELERY_RESULT_BACKEND: URL for Celery result backend (default: redis://localhost:6379/0)
+```env
+GRPC_HOST=localhost          # Host for gRPC server
+GRPC_PORT=50051              # Port for gRPC server
+FASTAPI_HOST=0.0.0.0         # Host for FastAPI
+FASTAPI_PORT=8000            # Port for FastAPI
+UPLOAD_DIR=uploads           # Directory for uploads
+CELERY_BROKER_URL=redis://localhost:6379/0  # URL for Celery message broker
+CELERY_RESULT_BACKEND=redis://localhost:6379/0  # URL for Celery result backend
+```
 
 ## Dependencies
 
