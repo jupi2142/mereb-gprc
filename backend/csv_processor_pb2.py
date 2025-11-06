@@ -24,23 +24,25 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13\x63sv_processor.proto\x12\rcsv_processor\"&\n\x11ProcessCsvRequest\x12\x11\n\tfile_path\x18\x01 \x01(\t\"5\n\x12ProcessCsvResponse\x12\x0f\n\x07task_id\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\"-\n\x1aGetProcessingResultRequest\x12\x0f\n\x07task_id\x18\x01 \x01(\t\"N\n\x08Progress\x12\x17\n\x0flines_processed\x18\x01 \x01(\x05\x12\x13\n\x0b\x64\x65partments\x18\x02 \x01(\x05\x12\x14\n\x0ctime_elapsed\x18\x03 \x01(\x02\"\x82\x01\n\x1bGetProcessingResultResponse\x12\x15\n\rprocessed_csv\x18\x01 \x01(\t\x12\x11\n\tcompleted\x18\x02 \x01(\x08\x12\x0e\n\x06status\x18\x03 \x01(\t\x12)\n\x08progress\x18\x04 \x01(\x0b\x32\x17.csv_processor.Progress2\xcf\x01\n\x0c\x43svProcessor\x12Q\n\nProcessCsv\x12 .csv_processor.ProcessCsvRequest\x1a!.csv_processor.ProcessCsvResponse\x12l\n\x13GetProcessingResult\x12).csv_processor.GetProcessingResultRequest\x1a*.csv_processor.GetProcessingResultResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13\x63sv_processor.proto\x12\rcsv_processor\"\x18\n\x08\x43svChunk\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\x0c\"5\n\x12ProcessCsvResponse\x12\x0f\n\x07task_id\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\"-\n\x1aGetProcessingResultRequest\x12\x0f\n\x07task_id\x18\x01 \x01(\t\"N\n\x08Progress\x12\x17\n\x0flines_processed\x18\x01 \x01(\x05\x12\x13\n\x0b\x64\x65partments\x18\x02 \x01(\x05\x12\x14\n\x0ctime_elapsed\x18\x03 \x01(\x02\"\x87\x01\n\x1bGetProcessingResultResponse\x12\x1a\n\x12processed_csv_path\x18\x01 \x01(\t\x12\x11\n\tcompleted\x18\x02 \x01(\x08\x12\x0e\n\x06status\x18\x03 \x01(\t\x12)\n\x08progress\x18\x04 \x01(\x0b\x32\x17.csv_processor.Progress\"(\n\x15\x44ownloadResultRequest\x12\x0f\n\x07task_id\x18\x01 \x01(\t2\x9b\x02\n\x0c\x43svProcessor\x12J\n\nProcessCsv\x12\x17.csv_processor.CsvChunk\x1a!.csv_processor.ProcessCsvResponse(\x01\x12l\n\x13GetProcessingResult\x12).csv_processor.GetProcessingResultRequest\x1a*.csv_processor.GetProcessingResultResponse\x12Q\n\x0e\x44ownloadResult\x12$.csv_processor.DownloadResultRequest\x1a\x17.csv_processor.CsvChunk0\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'csv_processor_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_PROCESSCSVREQUEST']._serialized_start=38
-  _globals['_PROCESSCSVREQUEST']._serialized_end=76
-  _globals['_PROCESSCSVRESPONSE']._serialized_start=78
-  _globals['_PROCESSCSVRESPONSE']._serialized_end=131
-  _globals['_GETPROCESSINGRESULTREQUEST']._serialized_start=133
-  _globals['_GETPROCESSINGRESULTREQUEST']._serialized_end=178
-  _globals['_PROGRESS']._serialized_start=180
-  _globals['_PROGRESS']._serialized_end=258
-  _globals['_GETPROCESSINGRESULTRESPONSE']._serialized_start=261
-  _globals['_GETPROCESSINGRESULTRESPONSE']._serialized_end=391
-  _globals['_CSVPROCESSOR']._serialized_start=394
-  _globals['_CSVPROCESSOR']._serialized_end=601
+  _globals['_CSVCHUNK']._serialized_start=38
+  _globals['_CSVCHUNK']._serialized_end=62
+  _globals['_PROCESSCSVRESPONSE']._serialized_start=64
+  _globals['_PROCESSCSVRESPONSE']._serialized_end=117
+  _globals['_GETPROCESSINGRESULTREQUEST']._serialized_start=119
+  _globals['_GETPROCESSINGRESULTREQUEST']._serialized_end=164
+  _globals['_PROGRESS']._serialized_start=166
+  _globals['_PROGRESS']._serialized_end=244
+  _globals['_GETPROCESSINGRESULTRESPONSE']._serialized_start=247
+  _globals['_GETPROCESSINGRESULTRESPONSE']._serialized_end=382
+  _globals['_DOWNLOADRESULTREQUEST']._serialized_start=384
+  _globals['_DOWNLOADRESULTREQUEST']._serialized_end=424
+  _globals['_CSVPROCESSOR']._serialized_start=427
+  _globals['_CSVPROCESSOR']._serialized_end=710
 # @@protoc_insertion_point(module_scope)

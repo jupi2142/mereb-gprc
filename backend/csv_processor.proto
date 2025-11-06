@@ -3,12 +3,13 @@ syntax = "proto3";
 package csv_processor;
 
 service CsvProcessor {
-  rpc ProcessCsv (ProcessCsvRequest) returns (ProcessCsvResponse);
+  rpc ProcessCsv (stream CsvChunk) returns (ProcessCsvResponse);
   rpc GetProcessingResult (GetProcessingResultRequest) returns (GetProcessingResultResponse);
+  rpc DownloadResult (DownloadResultRequest) returns (stream CsvChunk);
 }
 
-message ProcessCsvRequest {
-  string file_path = 1;
+message CsvChunk {
+  bytes data = 1;
 }
 
 message ProcessCsvResponse {
@@ -27,8 +28,12 @@ message Progress {
 }
 
 message GetProcessingResultResponse {
-  string processed_csv = 1;
+  string processed_csv_path = 1;
   bool completed = 2;
   string status = 3;
   Progress progress = 4;
+}
+
+message DownloadResultRequest {
+  string task_id = 1;
 }

@@ -4,6 +4,8 @@ import os
 import uuid
 from collections import defaultdict
 
+import ipdb
+
 import csv_processor_pb2
 import csv_processor_pb2_grpc
 import grpc
@@ -12,7 +14,7 @@ from celery_app import celery_app
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 
 load_dotenv()
 
@@ -26,37 +28,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
-if not os.path.isabs(UPLOAD_DIR):
-    UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), UPLOAD_DIR))
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
 
 @app.post("/upload")
 async def upload_file(file: UploadFile, request: Request):
-    # Save uploaded file
-    upload_id = str(uuid.uuid4())
-    upload_path = os.path.join(UPLOAD_DIR, f"{upload_id}.csv")
-    with open(upload_path, "wb") as f:
-        while chunk := await file.read(1024 * 1024):  # Read and write in 1MB chunks
-            f.write(chunk)
-
-    # Call gRPC service with file path
+    # Stream file content in chunks
     grpc_host = os.getenv("GRPC_HOST", "localhost")
     grpc_port = os.getenv("GRPC_PORT", "50051")
     with grpc.insecure_channel(f"{grpc_host}:{grpc_port}") as channel:
         stub = csv_processor_pb2_grpc.CsvProcessorStub(channel)
-        response = stub.ProcessCsv(
-            csv_processor_pb2.ProcessCsvRequest(file_path=upload_path)
-        )
+        def chunk_generator():
+            while True:
+                chunk = file.file.read(1024 * 1024)  # 1MB chunks
+                if not chunk:
+                    break
+                yield csv_processor_pb2.CsvChunk(data=chunk)
+        response = stub.ProcessCsv(chunk_generator())
         task_id = response.task_id
         status = response.status
 
-    download_url = request.url_for("download_file", file_id=task_id)
     return {
-        "download_url": str(download_url),
         "status": status,
         "task_id": task_id,
+        "download_url": str(request.url_for("download_file", task_id=task_id))
     }
 
 
@@ -72,7 +65,6 @@ async def get_status(task_id: str):
         )
         return {
             "completed": response.completed,
-            "processed_csv": response.processed_csv,
             "status": response.status,
             "progress": {
                 "lines_processed": response.progress.lines_processed,
@@ -81,18 +73,38 @@ async def get_status(task_id: str):
             },
         }
 
+@app.get("/download/{task_id}")
+async def download_file(task_id: str):
+    grpc_host = os.getenv("GRPC_HOST", "localhost")
+    grpc_port = os.getenv("GRPC_PORT", "50051")
 
-@app.api_route("/download/{file_id}", methods=["GET", "HEAD"])
-async def download_file(file_id: str):
-    file_path = os.path.join(UPLOAD_DIR, f"{file_id}_result.csv")
-    if os.path.exists(file_path):
-        return FileResponse(
-            file_path,
-            media_type="text/csv",
-            filename=f"{file_id}_result.csv",
+    # First check completion (can use short-lived channel)
+    async with grpc.aio.insecure_channel(f"{grpc_host}:{grpc_port}") as channel:
+        stub = csv_processor_pb2_grpc.CsvProcessorStub(channel)
+        status_response = await stub.GetProcessingResult(
+            csv_processor_pb2.GetProcessingResultRequest(task_id=task_id)
         )
-    else:
-        return JSONResponse(content={"error": "File not found"}, status_code=404)
+
+    if not status_response.completed:
+        return JSONResponse(
+            content={"error": "Processing not completed"},
+            status_code=400
+        )
+
+    # The channel and stub live as long as the stream is active
+    async def stream_generator():
+        async with grpc.aio.insecure_channel(f"{grpc_host}:{grpc_port}") as channel:
+            stub = csv_processor_pb2_grpc.CsvProcessorStub(channel)
+            async for chunk in stub.DownloadResult(
+                csv_processor_pb2.DownloadResultRequest(task_id=task_id)
+            ):
+                yield chunk.data
+
+    return StreamingResponse(
+        stream_generator(),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={task_id}_result.csv"},
+    )
 
 
 if __name__ == "__main__":

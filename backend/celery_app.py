@@ -7,7 +7,10 @@ from typing import Callable, Dict, Generator, List
 
 from celery import Celery
 
-UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
+RESULTS_DIR = os.getenv("RESULTS_DIR", "results")
+if not os.path.isabs(RESULTS_DIR):
+    RESULTS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), RESULTS_DIR))
+os.makedirs(RESULTS_DIR, exist_ok=True)
 
 celery_app = Celery(
     "csv_processor",
@@ -66,10 +69,10 @@ def create_csv_from_aggregated(sales: Dict[str, int], output: typing.TextIO) -> 
 
 
 @celery_app.task(bind=True)
-def process_csv_task(self, file_path: str) -> str:
+def process_csv_task(self, file_path: str) -> dict:
     rows = read_csv_rows(file_path)
     start_time = time.time()
-    result_path = os.path.join(UPLOAD_DIR, f"{process_csv_task.request.id}_result.csv")
+    result_path = os.path.join(RESULTS_DIR, f"{process_csv_task.request.id}_result.csv")
     progress_dict = {
         "lines_processed": 0,
         "departments": 0,

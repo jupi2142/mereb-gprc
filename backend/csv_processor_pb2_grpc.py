@@ -34,9 +34,9 @@ class CsvProcessorStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.ProcessCsv = channel.unary_unary(
+        self.ProcessCsv = channel.stream_unary(
                 '/csv_processor.CsvProcessor/ProcessCsv',
-                request_serializer=csv__processor__pb2.ProcessCsvRequest.SerializeToString,
+                request_serializer=csv__processor__pb2.CsvChunk.SerializeToString,
                 response_deserializer=csv__processor__pb2.ProcessCsvResponse.FromString,
                 _registered_method=True)
         self.GetProcessingResult = channel.unary_unary(
@@ -44,12 +44,17 @@ class CsvProcessorStub(object):
                 request_serializer=csv__processor__pb2.GetProcessingResultRequest.SerializeToString,
                 response_deserializer=csv__processor__pb2.GetProcessingResultResponse.FromString,
                 _registered_method=True)
+        self.DownloadResult = channel.unary_stream(
+                '/csv_processor.CsvProcessor/DownloadResult',
+                request_serializer=csv__processor__pb2.DownloadResultRequest.SerializeToString,
+                response_deserializer=csv__processor__pb2.CsvChunk.FromString,
+                _registered_method=True)
 
 
 class CsvProcessorServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def ProcessCsv(self, request, context):
+    def ProcessCsv(self, request_iterator, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -61,18 +66,29 @@ class CsvProcessorServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def DownloadResult(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_CsvProcessorServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'ProcessCsv': grpc.unary_unary_rpc_method_handler(
+            'ProcessCsv': grpc.stream_unary_rpc_method_handler(
                     servicer.ProcessCsv,
-                    request_deserializer=csv__processor__pb2.ProcessCsvRequest.FromString,
+                    request_deserializer=csv__processor__pb2.CsvChunk.FromString,
                     response_serializer=csv__processor__pb2.ProcessCsvResponse.SerializeToString,
             ),
             'GetProcessingResult': grpc.unary_unary_rpc_method_handler(
                     servicer.GetProcessingResult,
                     request_deserializer=csv__processor__pb2.GetProcessingResultRequest.FromString,
                     response_serializer=csv__processor__pb2.GetProcessingResultResponse.SerializeToString,
+            ),
+            'DownloadResult': grpc.unary_stream_rpc_method_handler(
+                    servicer.DownloadResult,
+                    request_deserializer=csv__processor__pb2.DownloadResultRequest.FromString,
+                    response_serializer=csv__processor__pb2.CsvChunk.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -86,7 +102,7 @@ class CsvProcessor(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def ProcessCsv(request,
+    def ProcessCsv(request_iterator,
             target,
             options=(),
             channel_credentials=None,
@@ -96,11 +112,11 @@ class CsvProcessor(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
+        return grpc.experimental.stream_unary(
+            request_iterator,
             target,
             '/csv_processor.CsvProcessor/ProcessCsv',
-            csv__processor__pb2.ProcessCsvRequest.SerializeToString,
+            csv__processor__pb2.CsvChunk.SerializeToString,
             csv__processor__pb2.ProcessCsvResponse.FromString,
             options,
             channel_credentials,
@@ -129,6 +145,33 @@ class CsvProcessor(object):
             '/csv_processor.CsvProcessor/GetProcessingResult',
             csv__processor__pb2.GetProcessingResultRequest.SerializeToString,
             csv__processor__pb2.GetProcessingResultResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DownloadResult(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(
+            request,
+            target,
+            '/csv_processor.CsvProcessor/DownloadResult',
+            csv__processor__pb2.DownloadResultRequest.SerializeToString,
+            csv__processor__pb2.CsvChunk.FromString,
             options,
             channel_credentials,
             insecure,
