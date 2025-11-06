@@ -34,7 +34,8 @@ async def upload_file(file: UploadFile, request: Request):
     upload_id = str(uuid.uuid4())
     upload_path = os.path.join(UPLOAD_DIR, f"{upload_id}.csv")
     with open(upload_path, "wb") as f:
-        f.write(await file.read())
+        while chunk := await file.read(1024 * 1024):  # Read and write in 1MB chunks
+            f.write(chunk)
 
     # Call gRPC service with file path
     grpc_host = os.getenv("GRPC_HOST", "localhost")
