@@ -22,6 +22,17 @@ cd backend
 uv sync
 ```
 
+## Testing
+
+Run the test suite using uv:
+
+```bash
+cd backend
+uv run pytest backend/
+```
+
+This will execute all unit tests, including tests that use the sample CSV files in `backend/test/` to validate the CSV processing functionality.
+
 ## Frontend Installation
 
 Navigate to the frontend directory and install dependencies:

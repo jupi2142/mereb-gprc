@@ -16,4 +16,5 @@ dependencies = [
     "redis",
     "ipdb>=0.13.13",
     "isort>=7.0.0",
+    "pytest",
 ]
