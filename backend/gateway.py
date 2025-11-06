@@ -27,18 +27,16 @@ app.add_middleware(
 )
 
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
-if os.path.isabs(UPLOAD_DIR):
-    upload_dir = UPLOAD_DIR
-else:
-    upload_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), UPLOAD_DIR))
-os.makedirs(upload_dir, exist_ok=True)
+if not os.path.isabs(UPLOAD_DIR):
+    UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), UPLOAD_DIR))
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 @app.post("/upload")
 async def upload_file(file: UploadFile, request: Request):
     # Save uploaded file
     upload_id = str(uuid.uuid4())
-    upload_path = os.path.join(upload_dir, f"{upload_id}.csv")
+    upload_path = os.path.join(UPLOAD_DIR, f"{upload_id}.csv")
     with open(upload_path, "wb") as f:
         while chunk := await file.read(1024 * 1024):  # Read and write in 1MB chunks
             f.write(chunk)
@@ -86,7 +84,7 @@ async def get_status(task_id: str):
 
 @app.api_route("/download/{file_id}", methods=["GET", "HEAD"])
 async def download_file(file_id: str):
-    file_path = os.path.join(upload_dir, f"{file_id}_result.csv")
+    file_path = os.path.join(UPLOAD_DIR, f"{file_id}_result.csv")
     if os.path.exists(file_path):
         return FileResponse(
             file_path,
