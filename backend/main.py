@@ -1,7 +1,6 @@
-import uvicorn
-
 import os
 
+import uvicorn
 from dotenv import load_dotenv
 from gateway import app
 

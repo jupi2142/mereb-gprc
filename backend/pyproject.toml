@@ -17,4 +17,5 @@ dependencies = [
     "ipdb>=0.13.13",
     "isort>=7.0.0",
     "pytest",
+    "ruff>=0.14.3",
 ]

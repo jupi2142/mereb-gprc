@@ -82,11 +82,13 @@ def process_csv_task(self, file_path: str) -> dict:
 
     def report_progress(current: int, departments: int, state: str = "PENDING"):
         time_elapsed = time.time() - start_time
-        progress_dict.update({
-            "lines_processed": current,
-            "departments": departments,
-            "time_elapsed": time_elapsed,
-        })
+        progress_dict.update(
+            {
+                "lines_processed": current,
+                "departments": departments,
+                "time_elapsed": time_elapsed,
+            }
+        )
         self.update_state(
             state=state,
             meta=progress_dict,
@@ -97,6 +99,7 @@ def process_csv_task(self, file_path: str) -> dict:
         create_csv_from_aggregated(sales, f)
 
     return progress_dict
+
 
 # Auto-discover tasks from all modules
 celery_app.autodiscover_tasks()
