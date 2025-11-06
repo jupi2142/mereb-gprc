@@ -1,5 +1,5 @@
 from fastapi import FastAPI, UploadFile, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uuid
 import os
@@ -11,6 +11,7 @@ import grpc
 from dotenv import load_dotenv
 import csv_processor_pb2_grpc
 import csv_processor_pb2
+from celery_app import celery_app
 
 load_dotenv()
 
@@ -42,14 +43,21 @@ async def upload_file(file: UploadFile, request: Request):
     grpc_port = os.getenv("GRPC_PORT", "50051")
     with grpc.insecure_channel(f"{grpc_host}:{grpc_port}") as channel:
         stub = csv_processor_pb2_grpc.CsvProcessorStub(channel)
-        response = stub.ProcessCsv(csv_processor_pb2.ProcessCsvRequest(file_path=upload_path))
+        response = stub.ProcessCsv(
+            csv_processor_pb2.ProcessCsvRequest(file_path=upload_path)
+        )
         task_id = response.task_id
+        status = response.status
 
     download_url = request.url_for("download_file", file_id=task_id)
-    return {"download_url": str(download_url)}
+    return {
+        "download_url": str(download_url),
+        "status": status,
+        "task_id": task_id,
+    }
 
 
-@app.get("/download/{file_id}")
+@app.api_route("/download/{file_id}", methods=["GET", "HEAD"])
 async def download_file(file_id: str):
     file_path = os.path.join(UPLOAD_DIR, f"{file_id}_result.csv")
     if os.path.exists(file_path):
@@ -59,7 +67,7 @@ async def download_file(file_id: str):
             filename=f"{file_id}_result.csv",
         )
     else:
-        return {"error": "File not found"}
+        return JSONResponse(content={"error": "File not found"}, status_code=404)
 
 
 if __name__ == "__main__":

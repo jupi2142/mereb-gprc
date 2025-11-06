@@ -13,6 +13,7 @@ message ProcessCsvRequest {
 
 message ProcessCsvResponse {
   string task_id = 1;
+  string status = 2;
 }
 
 message GetProcessingResultRequest {
