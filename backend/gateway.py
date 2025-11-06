@@ -43,7 +43,6 @@ async def upload_file(file: UploadFile, request: Request):
         stub = csv_processor_pb2_grpc.CsvProcessorStub(channel)
         response = stub.ProcessCsv(csv_processor_pb2.ProcessCsvRequest(file_path=upload_path))
         task_id = response.task_id
-        print(f"Task ID: {task_id}")
 
     download_url = request.url_for("download_file", file_id=task_id)
     return {"download_url": str(download_url)}

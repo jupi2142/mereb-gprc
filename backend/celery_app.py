@@ -2,8 +2,10 @@ from collections import defaultdict
 import csv
 import io
 from time import sleep
+import typing
 from celery import Celery
 import os
+from typing import Generator, Dict, List
 
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
 
@@ -22,7 +24,7 @@ celery_app.conf.update(
 )
 
 
-def read_csv_rows(file_path):
+def read_csv_rows(file_path: str) -> Generator[List[str], None, None]:
     with open(file_path, "r", newline="") as f:
         reader = csv.reader(f)
         try:
@@ -33,7 +35,7 @@ def read_csv_rows(file_path):
             pass
 
 
-def aggregate_sales(rows):
+def aggregate_sales(rows: Generator[List[str], None, None]) -> Dict[str, int]:
     sales = defaultdict(int)
     for row in rows:
         if len(row) < 3:
@@ -46,31 +48,24 @@ def aggregate_sales(rows):
     return sales
 
 
-def parse_and_aggregate_csv(file_path):
-    rows = read_csv_rows(file_path)
-    return aggregate_sales(rows)
-
-
-def create_csv_from_aggregated(sales):
-    output = io.StringIO()
+def create_csv_from_aggregated(sales: Dict[str, int], output: typing.TextIO) -> None:
     writer = csv.writer(output)
     writer.writerow(["Department Name", "Total Sales"])
     for dept, total in sales.items():
         writer.writerow([dept, total])
-    return output.getvalue()
+    output.seek(0)  # Reset to beginning for reading
 
 
 @celery_app.task
-def process_csv_task(file_path):
-    sales = parse_and_aggregate_csv(file_path)
-    processed_csv = create_csv_from_aggregated(sales)
-
-    # Save to file
+def process_csv_task(file_path: str) -> str:
+    sleep(5)
+    rows = read_csv_rows(file_path)
+    sales = aggregate_sales(rows)
     result_path = os.path.join(UPLOAD_DIR, f"{process_csv_task.request.id}_result.csv")
     with open(result_path, "w", newline="") as f:
-        f.write(processed_csv)
+        create_csv_from_aggregated(sales, f)
 
-    return processed_csv
+    return result_path
 
 
 # Auto-discover tasks from all modules
