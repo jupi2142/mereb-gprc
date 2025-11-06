@@ -20,7 +20,15 @@ message GetProcessingResultRequest {
   string task_id = 1;
 }
 
+message Progress {
+  int32 lines_processed = 1;
+  int32 departments = 2;
+  float time_elapsed = 3;
+}
+
 message GetProcessingResultResponse {
   string processed_csv = 1;
   bool completed = 2;
+  string status = 3;
+  Progress progress = 4;
 }

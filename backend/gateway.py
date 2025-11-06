@@ -58,6 +58,28 @@ async def upload_file(file: UploadFile, request: Request):
     }
 
 
+@app.get("/status/{task_id}")
+async def get_status(task_id: str):
+    grpc_host = os.getenv("GRPC_HOST", "localhost")
+    grpc_port = os.getenv("GRPC_PORT", "50051")
+
+    with grpc.insecure_channel(f"{grpc_host}:{grpc_port}") as channel:
+        stub = csv_processor_pb2_grpc.CsvProcessorStub(channel)
+        response = stub.GetProcessingResult(
+            csv_processor_pb2.GetProcessingResultRequest(task_id=task_id)
+        )
+        return {
+            "completed": response.completed,
+            "processed_csv": response.processed_csv,
+            "status": response.status,
+            "progress": {
+                "lines_processed": response.progress.lines_processed,
+                "departments": response.progress.departments,
+                "time_elapsed": response.progress.time_elapsed,
+            },
+        }
+
+
 @app.api_route("/download/{file_id}", methods=["GET", "HEAD"])
 async def download_file(file_id: str):
     file_path = os.path.join(UPLOAD_DIR, f"{file_id}_result.csv")

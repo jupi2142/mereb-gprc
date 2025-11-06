@@ -12,7 +12,7 @@ function App() {
   const handleUpload = async () => {
     if (!file) return
     const uploadId = Date.now() + Math.random()
-    const newUpload = { id: uploadId, fileName: file.name, status: 'uploading', downloadUrl: '' }
+    const newUpload = { id: uploadId, fileName: file.name, status: 'uploading', downloadUrl: '', progress: null }
     setUploads(prev => [newUpload, ...prev])
     const formData = new FormData()
     formData.append('file', file)
@@ -44,12 +44,20 @@ function App() {
 
   const handleCheck = async (upload) => {
     try {
-      const response = await fetch(upload.downloadUrl, { method: 'HEAD' })
-      if (response.ok) {
-        setUploads(prev => prev.map(u =>
-          u.id === upload.id ? { ...u, status: 'Completed' } : u
-        ))
+      const taskId = upload.downloadUrl.split('/').pop()
+      const response = await fetch(`http://localhost:8000/status/${taskId}`)
+      const data = await response.json()
+      const statusMap = {
+        PENDING: 'Pending',
+        STARTED: 'Processing',
+        SUCCESS: 'Completed',
+        FAILURE: 'Failed',
+        RETRY: 'Retrying'
       }
+      const friendlyStatus = statusMap[data.status] || data.status
+      setUploads(prev => prev.map(u =>
+        u.id === upload.id ? { ...u, status: friendlyStatus, progress: data.progress } : u
+      ))
     } catch (error) {
       console.error('Check failed:', error)
     }
@@ -67,6 +75,9 @@ function App() {
           <tr>
             <th>File Name</th>
             <th>Status</th>
+            <th>Lines</th>
+            <th>Depts</th>
+            <th>Time (s)</th>
             <th>Download</th>
           </tr>
         </thead>
@@ -75,11 +86,12 @@ function App() {
             <tr key={upload.id}>
               <td>{upload.fileName}</td>
               <td>{upload.status}</td>
+              <td>{upload.progress ? upload.progress.lines_processed : ''}</td>
+              <td>{upload.progress ? upload.progress.departments : ''}</td>
+              <td>{upload.progress ? upload.progress.time_elapsed.toFixed(2) : ''}</td>
               <td>
                 {upload.status === 'Completed' ? (
-                  <a href={upload.downloadUrl} target="_blank" rel="noopener noreferrer">
-                    📥
-                  </a>
+                  <button onClick={() => window.open(upload.downloadUrl, '_blank')}>📥</button>
                 ) : (
                   <button onClick={() => handleCheck(upload)}>🔄</button>
                 )}
