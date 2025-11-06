@@ -1,9 +1,12 @@
- import uvicorn
+import uvicorn
+
 import os
+
 from dotenv import load_dotenv
 from gateway import app
 
 load_dotenv()
+
 
 def main():
     print("Hello from mereb-gprc!")

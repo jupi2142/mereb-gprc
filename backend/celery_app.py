@@ -1,11 +1,11 @@
-from collections import defaultdict
 import csv
-import io
-from time import sleep
-import typing
-from celery import Celery
 import os
-from typing import Generator, Dict, List
+import time
+import typing
+from collections import defaultdict
+from typing import Callable, Dict, Generator, List
+
+from celery import Celery
 
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
 
@@ -35,9 +35,14 @@ def read_csv_rows(file_path: str) -> Generator[List[str], None, None]:
             pass
 
 
-def aggregate_sales(rows: Generator[List[str], None, None]) -> Dict[str, int]:
+def aggregate_sales(
+    rows: Generator[List[str], None, None],
+    progress_callback: Callable[[int, int, float], None] = None,
+    progress_interval: int = 10,
+) -> Dict[str, int]:
+    start_time = time.time()
     sales = defaultdict(int)
-    for row in rows:
+    for row_number, row in enumerate(rows, start=1):
         if len(row) < 3:
             continue  # Skip invalid rows
         dept, _, num_sales = row
@@ -45,6 +50,9 @@ def aggregate_sales(rows: Generator[List[str], None, None]) -> Dict[str, int]:
             sales[dept] += int(num_sales)
         except ValueError:
             pass  # Handle errors
+        if progress_callback and row_number % progress_interval == 0:
+            progress_callback(row_number, len(sales), time.time() - start_time)
+            time.sleep(2)
     return sales
 
 
@@ -56,11 +64,21 @@ def create_csv_from_aggregated(sales: Dict[str, int], output: typing.TextIO) -> 
     output.seek(0)  # Reset to beginning for reading
 
 
-@celery_app.task
-def process_csv_task(file_path: str) -> str:
-    sleep(5)
+@celery_app.task(bind=True)
+def process_csv_task(self, file_path: str) -> str:
     rows = read_csv_rows(file_path)
-    sales = aggregate_sales(rows)
+
+    def report_progress(current: int, departments: int, time_elapsed: float):
+        self.update_state(
+            state="PENDING",
+            meta={
+                "lines_processed": current,
+                "departments": departments,
+                "time_elapsed": time_elapsed,
+            },
+        )
+
+    sales = aggregate_sales(rows, progress_callback=report_progress, progress_interval=2)
     result_path = os.path.join(UPLOAD_DIR, f"{process_csv_task.request.id}_result.csv")
     with open(result_path, "w", newline="") as f:
         create_csv_from_aggregated(sales, f)

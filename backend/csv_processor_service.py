@@ -12,6 +12,7 @@ class CsvProcessorService(CsvProcessorServicer):
     def GetProcessingResult(self, request, context):
         task_result = AsyncResult(request.task_id, app=celery_app)
         if task_result.state == "PENDING":
+            print(f"Progress: {task_result.info}")
             return GetProcessingResultResponse(completed=False, status="PENDING")
         elif task_result.state == "SUCCESS":
             return GetProcessingResultResponse(
