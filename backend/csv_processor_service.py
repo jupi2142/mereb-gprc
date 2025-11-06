@@ -1,8 +1,3 @@
-import csv
-import io
-from collections import defaultdict
-
-from click.core import F
 from csv_processor_pb2_grpc import CsvProcessorServicer
 from csv_processor_pb2 import ProcessCsvResponse, GetProcessingResultResponse
 from celery.result import AsyncResult
